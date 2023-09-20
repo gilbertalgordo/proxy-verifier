@@ -27,6 +27,7 @@ Table of Contents
          * [Protocol Specification](#protocol-specification)
             * [PROXY protocol support](#proxy-protocol-support)
          * [Session and Transaction Delay Specification](#session-and-transaction-delay-specification)
+         * [Keep Connection Open](#keep-connection-open)
       * [Traffic Verification Specification](#traffic-verification-specification)
          * [Field Verification](#field-verification)
          * [URL Verification](#url-verification)
@@ -437,6 +438,31 @@ with their HTTP/1 counterparts. From a parsing perspective, this means they simp
 `headers` and `content` nodes that are used for HTTP/1 specification as described above. For
 an example, see the `RST_STREAM` frame section below.
 
+Note that multiple `DATA` frames can be specified for requests and responses. The replay follows
+the same order the `DATA` frames are listed. See the example below:
+
+```YAML
+  client-request:
+    frames:
+    - HEADERS:
+        headers:
+          fields:
+          - [:method, POST]
+          - [:scheme, https]
+          - [:authority, example.data.com]
+          - [:path, /a/path]
+          - [Content-Type, text/html]
+          - [uuid, 1]
+    - DATA:
+          content:
+          encoding: plain
+          data: client_data_1
+    - DATA:
+        content:
+          encoding: plain
+          data: client_data_2
+```
+
 #### RST_STREAM frame
 
 In some cases, there might be a need to test the behavior of the proxy when the
@@ -844,6 +870,56 @@ networks anything more precise than a millisecond will not generally be useful.
 See also [--rate &lt;requests/second&gt;](#--rate-requestssecond) below for
 rate specification of transactions.
 
+### Keep Connection Open
+
+In certain special situations, a user might need to keep the connection open
+after the final transaction in a session is done. To specify how long the connection
+needs to be kept open, the user can specify the duration as follows (value format is
+the same as [Session and Transaction Delay Specification](#session-and-transaction-delay-specification)):
+
+```YAML
+sessions:
+- protocol:
+  - name: http
+    version: 2
+  - name: tls
+    sni: test_sni
+  - name: tcp
+  - name: ip
+    version: 4
+
+  keep-connection-open: 2s
+
+  transactions:
+
+    client-request:
+      delay: 15ms
+
+      method: POST
+      url: /a/path.jpeg
+      version: '1.1'
+      headers:
+        fields:
+        - [ Content-Length, '399' ]
+        - [ Content-Type, image/jpeg ]
+        - [ Host, example.com ]
+        - [ uuid, 1 ]
+
+  server-response:
+    delay: 17000 us
+
+    status: 200
+    reason: OK
+    headers:
+      fields:
+      - [ Date, "Sat, 16 Mar 2019 03:11:36 GMT" ]
+      - [ Content-Type, image/jpeg ]
+      - [ Transfer-Encoding, chunked ]
+      - [ Connection, keep-alive ]
+    content:
+      size: 3432
+```
+
 ## Traffic Verification Specification
 
 In addition to replaying HTTP traffic as described above, Proxy Verifier also
@@ -1149,12 +1225,12 @@ node. The rules follow the same map syntax as described for field verification.
 
 ```YAML
   proxy-request:
-  content:
-    verify: {value: test1, as: equal}
+    content:
+      verify: {value: test1, as: equal}
 
   proxy-response:
-  content:
-    verify: {value: test2, as: contains}
+    content:
+      verify: {value: test2, as: contains}
 ```
 
 The `value` node in the `verify` node can be ommited if the `data` node is used
@@ -1164,16 +1240,49 @@ However, `value` node has priority over the `data` node, meaning if there is a
 
 ```YAML
   proxy-request:
-  content:
-    encoding: plain
-    data: test1
-    verify: {as: equal}
+    content:
+      encoding: plain
+      data: test1
+      verify: {as: equal}
 
   proxy-response:
-  content:
-    encoding: plain
-    data: test2
-    verify: {as: contains}
+    content:
+      encoding: plain
+      data: test2
+      verify: {as: contains}
+```
+
+Note that only one body verification node is needed, even if multiple `DATA` frames
+are specified as described in [HEADERS and DATA frame](#headers-and-data-frame). The
+verification node need to combine all the values specified for the `DATA` frames.
+See the example below:
+
+```YAML
+  client-request:
+    frames:
+    - HEADERS:
+        headers:
+          fields:
+          - [:method, POST]
+          - [:scheme, https]
+          - [:authority, example.data.com]
+          - [:path, /a/path]
+          - [Content-Type, text/html]
+          - [uuid, 1]
+    - DATA:
+          content:
+          encoding: plain
+          data: client_data_1
+    - DATA:
+        content:
+          encoding: plain
+          data: client_data_2
+
+  proxy-request:
+    content:
+      encoding: plain
+      data: client_data_1client_data_2
+      verify: {as: equal}
 ```
 
 ### Example Replay File

@@ -2089,15 +2089,16 @@ H3Session::write(HttpHeader const &hdr)
   }
 
   int submit_result = 0;
-  if (hdr._content_size > 0 && (hdr.is_request() || !HttpHeader::STATUS_NO_CONTENT[hdr._status])) {
+  if (hdr._content_length > 0 && (hdr.is_request() || !HttpHeader::STATUS_NO_CONTENT[hdr._status]))
+  {
     TextView content;
-    if (hdr._content_data) {
-      content = TextView{hdr._content_data, hdr._content_size};
+    if (hdr._content_data_list.front()) {
+      content = TextView{hdr._content_data_list.front(), hdr._content_length};
     } else {
       // If hdr._content_data is null, then there was no explicit description
       // of the body data via the data node. Instead we'll use our generated
       // HttpHeader::_content.
-      content = TextView{HttpHeader::_content.data(), hdr._content_size};
+      content = TextView{HttpHeader::_content.data(), hdr._content_length};
     }
     nghttp3_data_reader data_reader;
     data_reader.read_data = cb_h3_readfunction;
@@ -2297,6 +2298,10 @@ H3Session::receive_responses()
 {
   Errata errata;
   while (!stream_map.empty()) {
+    if (is_closed()) {
+      errata.note(S_ERROR, "The connection was closed while awaiting HTTP/3 responses.");
+      break;
+    }
     errata.note(nghttp3_receive_and_send_data(*this, Poll_Timeout));
     if (!errata.is_ok()) {
       errata.note(S_ERROR, "Encountered a problem while receiving responses.");
