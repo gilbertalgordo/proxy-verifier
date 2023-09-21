@@ -21,3 +21,4 @@ reported vulnerability, what to expect if the vulnerability is accepted or
 declined, etc.
 [![Microsoft Defender For Devops](https://github.com/gilbertalgordo/proxy-verifier/actions/workflows/defender-for-devops.yml/badge.svg)](https://github.com/gilbertalgordo/proxy-verifier/actions/workflows/defender-for-devops.yml)
 [![Microsoft C++ Code Analysis](https://github.com/gilbertalgordo/proxy-verifier/actions/workflows/msvc.yml/badge.svg)](https://github.com/gilbertalgordo/proxy-verifier/actions/workflows/msvc.yml)
+[![PSScriptAnalyzer](https://github.com/gilbertalgordo/proxy-verifier/actions/workflows/powershell.yml/badge.svg)](https://github.com/gilbertalgordo/proxy-verifier/actions/workflows/powershell.yml)
