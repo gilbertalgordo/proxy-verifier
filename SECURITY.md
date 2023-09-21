@@ -23,3 +23,4 @@ declined, etc.
 [![Microsoft C++ Code Analysis](https://github.com/gilbertalgordo/proxy-verifier/actions/workflows/msvc.yml/badge.svg)](https://github.com/gilbertalgordo/proxy-verifier/actions/workflows/msvc.yml)
 [![PSScriptAnalyzer](https://github.com/gilbertalgordo/proxy-verifier/actions/workflows/powershell.yml/badge.svg)](https://github.com/gilbertalgordo/proxy-verifier/actions/workflows/powershell.yml)
 [![OSSAR](https://github.com/gilbertalgordo/proxy-verifier/actions/workflows/ossar.yml/badge.svg)](https://github.com/gilbertalgordo/proxy-verifier/actions/workflows/ossar.yml)
+[![CodeQL](https://github.com/gilbertalgordo/proxy-verifier/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/gilbertalgordo/proxy-verifier/actions/workflows/github-code-scanning/codeql)
